@@ -138,7 +138,7 @@ public class phyloDriver {
 			System.out.println("\nPlease cite: L. Steinbrueck and A. C. McHardy (2012). Inference of Genotype-Phenotype Relationships in the Antigenic Evolution of Human Influenza A (H3N2) Viruses. PLoS Comp Biol 8(4): e1002492.\n");	
 		}
 
-		System.err.println("Seed="+argv[ARGUMENT_SEED_INDEX]);
+		// System.err.println("Seed="+argv[ARGUMENT_SEED_INDEX]);
 		
 		treeObj	tree = new treeObj();
 		fitchAlgoObj	fitch = new fitchAlgoObj ();
