@@ -39,7 +39,8 @@ LFLAGS		= -lc -lgfortran -shared
 ifdef CONDA_PREFIX
 LIB_LFLAGS	= -I ${CONDA_PREFIX}/lib/jvm/include/linux -I ${CONDA_PREFIX}/lib/jvm/include/
 else 
-LIB_LFLAGS	= -I /usr/lib/jvm/java-*/include/ -I /usr/lib/jvm/java-*/include/linux/
+JAVA_HOME := $(shell java -XshowSettings:properties -version 2>&1 | grep -Po '(?<=java.home = )(.*)')
+LIB_LFLAGS	= -I $(JAVA_HOME)/include/ -I $(JAVA_HOME)/include/linux/
 endif
 
 # create bin dir & compile java
