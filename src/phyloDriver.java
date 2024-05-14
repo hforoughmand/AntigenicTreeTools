@@ -127,13 +127,14 @@ public class phyloDriver {
 	}
 	
 	public static void main(String[] args) {
+		
+		// read arguments
+		String argv [] = readArgs(args);
+
 		if (!isSet(args[ARGUMENT_QUIET])) {
 			System.out.println("\nAntigenic Tree Tools");
 			System.out.println("\nPlease cite: L. Steinbrueck and A. C. McHardy (2012). Inference of Genotype-Phenotype Relationships in the Antigenic Evolution of Human Influenza A (H3N2) Viruses. PLoS Comp Biol 8(4): e1002492.\n");	
 		}
-		
-		// read arguments
-		String argv [] = readArgs(args);
 
 		System.err.println("Seed="+argv[ARGUMENT_SEED_INDEX]);
 		
