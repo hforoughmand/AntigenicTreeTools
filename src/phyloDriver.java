@@ -56,13 +56,14 @@ public class phyloDriver {
 
 	final static int ARGUMENT_SEED_INDEX = 17;
 	final static int ARGUMENT_COST_MATRIX_FILE = 18;
+	final static int ARGUMENT_QUIET = 19;
 	
 	public static String [] readArgs (String [] args) {
 		if (args.length == 0) {
 			printHelp ();
 			System.exit (1);
 		}
-		String arguments [] = new String [19];
+		String arguments [] = new String [20];
 		for (int i = 0; i < arguments.length; i++) arguments [i] = null;
 		for (int i = 0; i < args.length; i++) {
 			if (args[i].equals("-h")) { 
@@ -87,6 +88,7 @@ public class phyloDriver {
 			else if (args[i].equals("-d")) { arguments [16] = "isDistance"; }	//	HI values already distances?
 			else if (args[i].equals("-seed")) { arguments [ARGUMENT_SEED_INDEX] = args[++i]; }	//	HI values already distances?
 			else if (args[i].equals("-cost")) { arguments [ARGUMENT_COST_MATRIX_FILE] = args[++i]; }	//	HI values already distances?
+			else if (args[i].equals("-q")) { arguments [ARGUMENT_QUIET] = "q"; }		//	trees in nexus format or phylip (nexus is default)?
 			else { 
 				// System.out.println ("Unknown option '" + args[i] + "'! Use '-h' for help."); 
 				throw new RuntimeException("Unknown option '" + args[i] + "'! Use '-h' for help.");
@@ -125,17 +127,23 @@ public class phyloDriver {
 	}
 	
 	public static void main(String[] args) {
-		System.out.println("\nAntigenic Tree Tools");
-		System.out.println("\nPlease cite: L. Steinbrueck and A. C. McHardy (2012). Inference of Genotype-Phenotype Relationships in the Antigenic Evolution of Human Influenza A (H3N2) Viruses. PLoS Comp Biol 8(4): e1002492.\n");
+		if (!isSet(args[ARGUMENT_QUIET])) {
+			System.out.println("\nAntigenic Tree Tools");
+			System.out.println("\nPlease cite: L. Steinbrueck and A. C. McHardy (2012). Inference of Genotype-Phenotype Relationships in the Antigenic Evolution of Human Influenza A (H3N2) Viruses. PLoS Comp Biol 8(4): e1002492.\n");	
+		}
 		
 		// read arguments
 		String argv [] = readArgs(args);
+
+		System.err.println("Seed="+argv[ARGUMENT_SEED_INDEX]);
 		
 		treeObj	tree = new treeObj();
 		fitchAlgoObj	fitch = new fitchAlgoObj ();
 		
 		// read tree and sequences
-		System.out.print ("> read tree and sequences ...\t");
+		if (!isSet(args[ARGUMENT_QUIET])) {
+			System.out.print ("> read tree and sequences ...\t");
+		}
 		String	newick = tree.readNewickTree(argv[0],argv[4]),
 			leaveSeqs[][] = null,
 			interSeqs[][] = null;
@@ -147,42 +155,62 @@ public class phyloDriver {
 		}
 		String	type = tree.sequenceType(leaveSeqs[0][1]);
 		
-		System.out.println ("\tdone");
+		if (!isSet(args[ARGUMENT_QUIET])) {
+			System.out.println ("\tdone");
+		}
 
 		node	root = new node(0,newick.split(",").length);
 		root.identifier = "0";
 		
 		// build tree from newick format
-		System.out.print ("> build tree ...\t\t");
+		if (!isSet(args[ARGUMENT_QUIET])) {
+			System.out.print ("> build tree ...\t\t");
+		}
 		int numNodes = tree.createTree(newick,root,1,type);
 		if (isSet(argv [10])) root = tree.rerootTree(root,argv [10]);
-		System.out.println ("\tdone");
+		if (!isSet(args[ARGUMENT_QUIET])) {
+			System.out.println ("\tdone");
+		}
 		
 		// read linkage
 		if(!isSet (argv [9])) {
-			System.out.print ("> map linkage ...\t\t");
+			if (!isSet(args[ARGUMENT_QUIET])) {
+				System.out.print ("> map linkage ...\t\t");
+			}
 			String	linkage [][] = tree.readLinkage(argv [3]);
 			// map linkage to tree
 			tree.cleanIdentifier(root);
 			tree.mapIntermediates(root,linkage);
-			System.out.println ("\tdone");
+			if (!isSet(args[ARGUMENT_QUIET])) {
+				System.out.println ("\tdone");
+			}
 		}	
 		
 		// map sequences to each node, leave nodes and intermediates separated
-		System.out.print ("> map sequences to nodes ...\t");
+		if (!isSet(args[ARGUMENT_QUIET])) {
+			System.out.print ("> map sequences to nodes ...\t");
+		}
 		tree.mapSequences(leaveSeqs, root);
 		if (interSeqs != null && !isSet(argv[9])) tree.mapSequences(interSeqs, root);
-		System.out.println ("\tdone");
-		
-		// collapse branches
-		if (isSet(argv [8])) {
-			System.out.print ("> collapse branches ...\t\t");
-			tree.collapseBranches (root, 0.0000001,root);
+		if (!isSet(args[ARGUMENT_QUIET])) {
 			System.out.println ("\tdone");
 		}
 		
+		// collapse branches
+		if (isSet(argv [8])) {
+			if (!isSet(args[ARGUMENT_QUIET])) {
+				System.out.print ("> collapse branches ...\t\t");
+			}
+			tree.collapseBranches (root, 0.0000001,root);
+			if (!isSet(args[ARGUMENT_QUIET])) {
+				System.out.println ("\tdone");
+			}
+		}
+		
 		if (isSet(argv[9])){
-			System.out.print ("> infer ancestral character states ...");
+			if (!isSet(args[ARGUMENT_QUIET])) {
+				System.out.print ("> infer ancestral character states ...");
+			}
 			if (argv[9].equals("Sankoff")) {
 				Sankoff sankoff = new Sankoff();
 				sankoff.ancestralStateReconstruction(root, leaveSeqs[0][1].length(), isSet(argv[12]), argv[ARGUMENT_COST_MATRIX_FILE]);
@@ -190,47 +218,69 @@ public class phyloDriver {
 				fitch.ancestralStateReconstruction(root, leaveSeqs[0][1].length(), isSet(argv[12]), argv[9], isSet(argv[ARGUMENT_SEED_INDEX]) ? Long.parseLong(argv[ARGUMENT_SEED_INDEX]) : null);
 			}
 			tree.setTerminalGaps(root);
-			System.out.println ("\tdone");
+			if (!isSet(args[ARGUMENT_QUIET])) {
+				System.out.println ("\tdone");
+			}
 		}
 		
 		// map mutations to branches
-		System.out.print ("> map mutations ...\t\t");
+		if (!isSet(args[ARGUMENT_QUIET])) {
+			System.out.print ("> map mutations ...\t\t");
+		}
 		tree.mapMutations(root);
-		System.out.println ("\tdone");
+		if (!isSet(args[ARGUMENT_QUIET])) {
+			System.out.println ("\tdone");
+		}
 		
 		boolean	map = (isSet(argv [5]));
 
 		// map sequence labels to leave nodes?
 		if (isSet(argv [5])) {
-			System.out.print ("> map leaf labels ...\t\t");
+			if (!isSet(args[ARGUMENT_QUIET])) {
+				System.out.print ("> map leaf labels ...\t\t");
+			}
 			tree.mapLabels(argv [5],root,numNodes, argv[6]);
-			System.out.println ("\tdone");
+			if (!isSet(args[ARGUMENT_QUIET])) {
+				System.out.println ("\tdone");
+			}
 		}
 		tree.countSubHosts (root);
 		
 		// delete subtrees from whole tree?
 		if (isSet(argv [6])) {
-			System.out.print ("> delete subtree(s) ...\t\t");
+			if (!isSet(args[ARGUMENT_QUIET])) {
+				System.out.print ("> delete subtree(s) ...\t\t");
+			}
 			tree.pruneTree (argv [6], root);
 			/*if (isSet(argv [5]))*/ tree.countSubHosts (root);
-			System.out.println ("\tdone");
+			if (!isSet(args[ARGUMENT_QUIET])) {
+				System.out.println ("\tdone");
+			}
 		}
 		
 		// reorder tree
 		tree.reorderTree (root,false);
 		
 		// read HI matrix
-		System.out.print ("> compute HI distances ...\t");
+		if (!isSet(args[ARGUMENT_QUIET])) {
+			System.out.print ("> compute HI distances ...\t");
+		}
 		HIMat	him = new HIMat();
 		him.getLog2Table(argv[11], isSet(argv[16]));
-		System.out.println ("\tdone");
+		if (!isSet(args[ARGUMENT_QUIET])) {
+			System.out.println ("\tdone");
+		}
 		
 		// solve least squares problem
-		System.out.print ("> solve least squares problem ...\t");
+		if (!isSet(args[ARGUMENT_QUIET])) {
+			System.out.print ("> solve least squares problem ...\t");
+		}
 		NNLSsolver	nnls = new NNLSsolver ();
 		nnls.computeBranchWeights(root, him, argv [7]+(isSet(argv [6]) ? ".pruned" : "") + ".leastSquares", argv [14], argv [15], map, leaveSeqs, numNodes);
-		System.out.println ("done");
+		if (!isSet(args[ARGUMENT_QUIET])) {
+			System.out.println ("done");
+			System.out.println("");
+		}
 		
-		System.out.println("");
 	}
 }
