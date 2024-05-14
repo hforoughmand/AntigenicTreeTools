@@ -39,7 +39,7 @@ LFLAGS		= -lc -lgfortran -shared
 ifdef CONDA_PREFIX
 LIB_LFLAGS	= -I ${CONDA_PREFIX}/lib/jvm/include/linux -I ${CONDA_PREFIX}/lib/jvm/include/
 else 
-LIB_LFLAGS	= /usr/lib/jvm/java-*/include/ /usr/lib/jvm/java-*/include/linux/
+LIB_LFLAGS	= -I /usr/lib/jvm/java-*/include/ -I /usr/lib/jvm/java-*/include/linux/
 endif
 
 # create bin dir & compile java
