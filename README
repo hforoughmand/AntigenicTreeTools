@@ -1,0 +1,205 @@
+COPYRIGHT:
+==========
+
+Copyright 2012 Lars Steinbrueck under the GPL.
+See file LICENSE.txt for details.
+The software includes other software written by third
+parties. This has been distributed according to the 
+licenses provided by the respective authors (se below).
+
+JAMA (http://math.nist.gov/javanumerics/jama/):
+This software is a cooperative product of The MathWorks 
+and the National Institute of Standards and Technology (NIST) 
+which has been released to the public domain. Neither The 
+MathWorks nor NIST assumes any responsibility whatsoever for 
+its use by other parties, and makes no guarantees, expressed 
+or implied, about its quality, reliability, or any other 
+characteristic.
+
+BVLS (http://people.sc.fsu.edu/~jburkardt/f_src/bvls/bvls.html):
+Charles Lawson, Richard Hanson,
+Solving Least Squares Problems,
+Revised edition, 
+SIAM, 1995,
+ISBN: 0898713560,
+LC: QA275.L38.
+
+
+GENERAL USAGE:
+==============
+
+The software is written in Jjava and depending on the version 
+includes further C and Fortran code. The software is distributed 
+either as (i) a jar file or as (ii) java, c and fortran source code. 
+The first version solves the non-negative least-squares (NNLS) 
+problem using an implementation in java. This version is already 
+compiled and can be used from scratch. The second version solves 
+the NNLS problem with a fortran implementation of C. Lawson and 
+R. Hanson. We strongly recommend the use of the second version, 
+as this implementation is magnitudes faster than the java 
+implementation.
+
+
+INSTALLATION:
+-------------
+
+Version (i) needs no installation and can be used directly. To compile 
+version (ii) adjust the file 'makefile', such that the neccessary 
+libraries 'jni.h' and 'jni_md.h' can be included. After adjustment 
+simply type 'make' and the source code will be compiled into the 
+'bin/' directory.
+
+
+RUN THE PROGRAM:
+----------------
+
+Version (i): java -jar AntigenicTreeTools.jar [options]
+
+Version (ii): java -cp [path to software folder]/bin/:[path to software folder]/jar/Jama.jar -Djava.library.path=[path to software folder]/bin/ phyloDriver [options]
+
+
+Options:
+........
+
+	-h will print the help mesage below.
+
+	Use the following options:	(options indicated with [] are optional)
+	TREE INPUT
+	[-f strategy	-- infer intermediate sequences (AccTran/DelTran)]
+	[-g			-- count gaps as changes (when ancestral states are reconstructed)]
+	[-i file		-- input file with intermediate sequences in fasta format]
+	[-l file		-- file with node linkage]
+	[-m file		-- file with leaf node mapping]
+	 -n file		-- file with tree in newick format
+	 -o name		-- output name
+	[-p			-- given tree is in phylip format (default is nexus)]
+	 -t file		-- input file with leave sequences in fasta format
+	
+	TREE MANIPULATION
+	[-col			-- permit branch collapsing]
+	[-not list		-- comma separated list of nodes to be pruned]
+	[-r name		-- reroot tree at leaf 'name']
+	
+	NNLS FIT
+	 -ls file		-- input matrix for least squares fit
+	[-d			-- HI input matrix contains already log2 normalized distance values]
+	[-loo			-- do loo for fit?]
+	[-cv "x,y"	-- do x-fold cross validation y times for fit?]
+
+
+Output:
+.......
+
+The program will output three files:
+	[output name].leastSquares.distance	The squared training and testing (if applied) error for 
+						each element (HI titer / distance) and the total squarred
+						and absolut error. Each line is compossed of
+						distance label [tab] true value [tab] predicted value (training) 
+						[tab] squarred error (training) [tab] predicted value (testing, 
+						if applied) [tab] squarred error (testing, if applied)
+	[output name].leastSquares.mutationImpact	Individual weigths of each branch. Each line is compossed of
+							branch ID [tab] weight [tab] mapped mutations
+							Positive branch IDs refer to up-weights, whereas negativ
+							branch IDs refer to down-weigths. 'NaN' indicates that no 
+							weight could be inferred for that branch (e.g. in case of 
+							no antiserum is present in the subtree, such that the 
+							down weight is not defined).
+	[output name].leastSquares.withMuts.tre	Antigenic tree in nexus format with mutations and antigenic 
+						weights mapped to each branch. Branch lengths are set to the 
+						maximum of the respective up- or down-weight. The tree can be 
+						easily viewed using FigTree (http://tree.bio.ed.ac.uk/software/figtree/).
+
+
+Options in detail:
+..................
+
+	-col	Collapse branches that are shorter than 1e-7. Results in multifurcating trees.
+	
+	-cv	Perform a x-fold cross validation for the specified data. Parameter passed as 'x,n': x-fold 
+		cross-validation independently repeated n times. Folds are built randomly.
+	
+	-d	Input matrix for least-squares optimization already contains log2 transformed distances.
+	
+	-f	Strategy for ancestral character state reconstruction. Choose AccTran (accelerated transformation, default)
+		or DelTran (delayed transformation).
+	
+	-g	Count gaps as changes during ancestral character state reconstruction. If not specified, gaps will be 
+		treated as missing.
+	
+	-i	Alignment file containing the sequences of intermediate nodes in fasta format.
+	
+	-l	Linkage file to map ancestral sequences to intermediate nodes. The file is compossed of pairs of nodes 
+		of the following scheme: from [tab] to [line break]. The ordering of links is defined by the newick tree 
+		(parsing the newick string from the left to the right).
+	
+	-ls	Either the HI titer matrix or already log2 transformed distance values. In the second case the option
+		'-d' has to be used, too. For the HI titer matrix the titers between antigen i and antiserum j 
+		will be transformed into log2 distances: d(i,j) = log2(max(H(j))) - log2(H(i,j)). The general input 
+		format follows this specification:
+			First row:	Sera names, tab separated, starting with a tab ([tab] name 1 [tab] name 2 [tab] ...)
+			Second row:	Reference values for normalization (REF [tab] value for serum 1 [tab] value 
+					for serum 2 [tab] ...). If log2 distances are provided set these values to 0.0.
+			Remaining rows:	Input values (antigen name [tab] value for serum 1 [tab] value for serum 2 [tab] ...)
+					If a value for a specific serum is not present use '*' (in case of HI titers) 
+					or 'NaN' (in case of log2 transformed distances).
+	
+	-loo	Perform leave-one-out cross-validation for the specified data. For each element of the input matrix 
+		train a model (antigenic tree) using all other elements and predict the distance for the left out 
+		element.
+	
+	-m	Mapping of additional information to leaf nodes. This file is addapted to the needs of influenza virus 
+		strains and allows to pass additional information to the program. Each line has top follow this scheme:
+		Node ID [tab] accession [tab] strain name [tab] serotype [tab] year of isolation [tab] host [tab] whole 
+		identifier string [tab] exact date of isolation
+		In the current version of the program only column one and three are used. The remaining information can 
+		be skipped (left blank). If this option is specified, the strain names will be output at the leaves of 
+		the tree rather than the node identifiers.
+	
+	-n	The newick tree either in nexus format or in phylip format. If the tree is supplied in phylip format
+		you have to specify the option '-p', too.
+	
+	-not	Remove the specified leaf nodes from the tree. IDs should be passed comma separated (ID1,ID2,...)
+	
+	-o	Output prefix used for output files.
+	
+	-p	Input tree is in phylip format. If not specified, the input tree is assmed to be in nexus format.
+	
+	-r	Reroot the tree at the specified leaf node.
+	
+	-t	Alignment file for leave sequences in fasta format.
+
+
+Ancestral character state reconstruction:
+.........................................
+
+For sake of simplicity we implemented a basic parsimony approach [1] for ancestral character state 
+reconstruction. Ties are resolved using either accelerated transition ('-f AccTran') or delayed transition 
+('-f DelTran'). However, the output of other ancestral character state reconstruction techniques can be used, too. 
+In this case do not specify the '-f' option. Instead provide the sequences of intermediate nodes ('-i') and 
+and a linkage file ('l') to specify where the sequences map in the tree.
+
+
+Examples (called from within the software directory):
+....................................................
+
+(1) java -cp bin/:jar/Jama.jar -Djava.library.path=bin/ phyloDriver -n example_data/tree.phy -p -t example_data/aa.aln -f AccTran -m example_data/aa.map -col -r f0dp7 -ls example_data/HI_titers.txt -o WHO1988a
+(2) java -cp bin/:jar/Jama.jar -Djava.library.path=bin/ phyloDriver -n example_data/tree.phy -p -t example_data/aa.aln -i example_data/aa.intermediate.aln -l example_data/aa.link -m example_data/aa.map -col -r f0dp7 -ls example_data/HI_distances.txt -d -o WHO1988b
+(3) java -jar AntigenicTreeTools.jar -n example_data/tree.phy -p -t example_data/aa.aln -f AccTran -m example_data/aa.map -col -r f0dp7 -ls example_data/HI_titers.txt -loo -o WHO1988c
+
+These examples highlight the use of the different versions and parameters. The first and second example use the 
+Fortran library to solve the NNLS problem, whereas the last example uses a Java library. All examples produce the 
+same output. However differences are as follows: 
+ - Example (1) infers the ancestral character states using an implemented parsimony approach and transformes the
+   HI titers into distances. 
+ - Example (2) reads node linkage information and maps ancestral sequences that were inferred by a different 
+   program and uses already log2-transformed distances.
+ - Example (3) is similar to example (1), but furthermore computes the leave-one-out error.
+Example sequences were downloaded from the Influenza Virus Ressource [2] and HI data retrieved from [3].
+
+
+References:
+===========
+
+[1] Fitch, W. (1971). Toward defining the course of evolution: minimum change for a specific tree topology. Syst Zool, 20 (4): 406-16.
+[2] Bao, Y., P. Bolotov, D. Dernovoy, B. Kiryutin, L. Zaslavsky et al. (2008). The influenza virus resource at the National Center for Biotechnology Information. J Virol, 82 (2): 596-601.
+[3] WHO (1988). Recommended composition of influenza virus vaccines for use in the 1988-1989 season. WHO Wkly Epidem Rec 63 (9): 57-60.
