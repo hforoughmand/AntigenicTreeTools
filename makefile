@@ -23,14 +23,24 @@ SRC		= src
 JAR		= jar
 BIN		= bin
 
+ifdef CONDA_PREFIX
+USR := ${CONDA_PREFIX}
+else
+USR := /usr
+endif
+
 # compilers
-JAVAC		= ${CONDA_PREFIX}/bin/javac
-JAVAH		= ${CONDA_PREFIX}/bin/javah
-CC		= ${CONDA_PREFIX}/bin/gcc
+JAVAC		= $(USR)/bin/javac
+JAVAH		= $(USR)/bin/javah
+CC			= $(USR)/bin/gcc
 
 LFLAGS		= -lc -lgfortran -shared
 # change the following row to match your system configuration (include directories where 'jni.h' and 'jni_md.h' are located)
+ifdef CONDA_PREFIX
 LIB_LFLAGS	= -I ${CONDA_PREFIX}/lib/jvm/include/linux -I ${CONDA_PREFIX}/lib/jvm/include/
+else 
+LIB_LFLAGS	= /usr/lib/jvm/java-*/include/ /usr/lib/jvm/java-*/include/linux/
+endif
 
 # create bin dir & compile java
 $(BIN)/phyloDriver.class: $(SRC)/phyloDriver.java
