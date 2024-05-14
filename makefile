@@ -48,7 +48,7 @@ $(BIN)/libbvlslib.so: $(SRC)/phyloDriver.java
 	@ mkdir -p $(BIN)
 	$(JAVAC) -cp $(SRC)/:$(JAR)/Jama.jar -d $(BIN) $(SRC)/phyloDriver.java
 	#$(JAVAH) -bootclasspath $(BIN) -d $(BIN) -jni NNLSsolver
-	$(JAVAC) -h $(BIN) -cp $(BIN):$(JAR)/Jama.jar $(SRC)/NNLSsolver.java
+	$(JAVAC) -h $(BIN) -cp $(BIN):$(JAR)/Jama.jar $(SRC)/NNLSsolver.java -d $(BIN)
 	$(CC) -c -g -o $(BIN)/bvls.o $(SRC)/bvls.f90 -fPIC
 	$(CC) -o $(BIN)/libbvlslib.so -Wl,-soname,$(BIN)/libbvlslib.so $(LIB_LFLAGS) $(SRC)/bvls.c $(BIN)/bvls.o $(LFLAGS) -fPIC
 

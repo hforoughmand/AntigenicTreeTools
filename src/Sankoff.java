@@ -18,8 +18,16 @@
 *
 **************************************************************************/
 
-import java.lang.reflect.Array;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Stream;
+
+import javax.management.RuntimeErrorException;
 
 
 interface TreeRecursiveUpdate {
@@ -30,389 +38,13 @@ interface TreeRecursiveUpdate {
 
 public class Sankoff {
 	
-	// private void fitchPhaseOne (node curNode, int pos, boolean gaps) {
-	// 	if (curNode.numChilds == 0) {
-	// 		curNode.intermAnc = new HashSet<String>();
-	// 		curNode.fitchType = "child";
-			
-	// 		if (curNode.type.equals("DNA")) {
-	// 				if (curNode.tmpSequence.charAt(pos) != '-') {
-	// 					switch (curNode.tmpSequence.charAt(pos)) {
-	// 						case 'R': case 'r': curNode.intermAnc.add("A"); curNode.intermAnc.add("G"); break;
-	// 						case 'Y': case 'y': curNode.intermAnc.add("C"); curNode.intermAnc.add("T"); break;
-	// 						case 'M': case 'm': curNode.intermAnc.add("A"); curNode.intermAnc.add("C"); break;
-	// 						case 'K': case 'k': curNode.intermAnc.add("G"); curNode.intermAnc.add("T"); break;
-	// 						case 'S': case 's': curNode.intermAnc.add("C"); curNode.intermAnc.add("G"); break;
-	// 						case 'W': case 'w': curNode.intermAnc.add("A"); curNode.intermAnc.add("T"); break;
-	// 						case 'H': case 'h': curNode.intermAnc.add("A"); curNode.intermAnc.add("C"); curNode.intermAnc.add("T"); break;
-	// 						case 'B': case 'b': curNode.intermAnc.add("C"); curNode.intermAnc.add("G"); curNode.intermAnc.add("T"); break;
-	// 						case 'V': case 'v': curNode.intermAnc.add("A"); curNode.intermAnc.add("C"); curNode.intermAnc.add("G"); break;
-	// 						case 'D': case 'd': curNode.intermAnc.add("A"); curNode.intermAnc.add("G"); curNode.intermAnc.add("T"); break;
-	// 						case 'N': case 'n': case '?': curNode.intermAnc.add("A"); curNode.intermAnc.add("C"); curNode.intermAnc.add("G"); curNode.intermAnc.add("T"); if (gaps) curNode.intermAnc.add("-"); break; // if (gaps) curNode.intermAnc.add("-");
-	// 						default: curNode.intermAnc.add(""+Character.toUpperCase(curNode.tmpSequence.charAt(pos))); break;
-	// 					}
-	// 				}
-	// 				else {
-	// 					if (gaps) {
-	// 						curNode.intermAnc.add(""+Character.toUpperCase(curNode.tmpSequence.charAt(pos)));
-	// 					}
-	// 					else {
-	// 						curNode.intermAnc.add("A"); 
-	// 						curNode.intermAnc.add("C"); 
-	// 						curNode.intermAnc.add("G"); 
-	// 						curNode.intermAnc.add("T");
-	// 					}
-	// 				}
-	// 			}
-	// 			else {
-	// 				if (curNode.tmpSequence.charAt(pos) != '-') {
-	// 					switch (curNode.tmpSequence.charAt(pos)) {
-	// 						case 'B': case 'b': curNode.intermAnc.add("D"); curNode.intermAnc.add("N"); break;
-	// 						case 'Z': case 'z': curNode.intermAnc.add("E"); curNode.intermAnc.add("Q"); break;
-	// 						case 'J': case 'j': curNode.intermAnc.add("L"); curNode.intermAnc.add("I"); break;
-	// 						case 'X': case 'x': case '?': for (int i = 65; i < 91; i++) { curNode.intermAnc.add("" + (char)i); } break; //if (gaps) curNode.intermAnc.add("-"); 
-	// 						default: curNode.intermAnc.add(""+Character.toUpperCase(curNode.tmpSequence.charAt(pos))); break;
-	// 					}
-	// 				}
-	// 				else {
-	// 					if (gaps) {
-	// 						curNode.intermAnc.add(""+Character.toUpperCase(curNode.tmpSequence.charAt(pos)));
-	// 					}
-	// 					else {
-	// 						for (int i = 65; i < 91; i++) { curNode.intermAnc.add("" + (char)i); }
-	// 					}
-	// 				}
-	// 			}
-	// 	}
-	// 	else {
-	// 		for (int i = 0; i < curNode.numChilds; i++) this.fitchPhaseOne (curNode.childArray [i], pos, gaps);
-	// 		if (curNode.numChilds == 2) {
-	// 			curNode.intermAnc = new HashSet<String>(curNode.childArray[0].intermAnc);
-	// 			// if one is empty build the union
-	// 			if (curNode.childArray[0].intermAnc.isEmpty() || curNode.childArray[1].intermAnc.isEmpty()) {
-	// 				curNode.intermAnc.addAll (curNode.childArray[1].intermAnc);
-	// 				curNode.fitchType = (curNode.childArray[0].intermAnc.isEmpty() ? curNode.childArray[0].fitchType : curNode.childArray[1].fitchType);
-	// 			}
-	// 			else {
-	// 				curNode.intermAnc.retainAll(curNode.childArray[1].intermAnc);	// intersection
-	// 				if (curNode.intermAnc.isEmpty()) {
-	// 					curNode.intermAnc.addAll(curNode.childArray[0].intermAnc);	// union
-	// 					curNode.intermAnc.addAll(curNode.childArray[1].intermAnc);	// union
-	// 					curNode.fitchType = "union";
-	// 				}
-	// 				else {
-	// 					curNode.fitchType = "intersection";
-	// 				}
-	// 			}
-	// 		}
-	// 		else {	// multifurcating tree => majority voting
-	// 			curNode.fitchType = "multi";
-	// 			curNode.intermAnc = new HashSet<String>();
-				
-	// 			int	intermCount [] = new int [27];
-	// 			int	max = 1,
-	// 				numSet = 0;
-				
-	// 			for (int i = 0; i < curNode.numChilds; i++) {
-	// 				if (!curNode.childArray [i].intermAnc.isEmpty()) {
-	// 					for (String s : curNode.childArray[i].intermAnc) {
-	// 						if (s.equals("-")) {
-	// 								if(gaps) intermCount[intermCount.length-1]++;
-	// 						}
-	// 						else if (s.equals("?")) {
-								
-	// 						}
-	// 						else {
-	// 							intermCount[((int)s.charAt(0)) -65]++;
-	// 						}
-	// 					}
-	// 				}
-	// 			}
-				
-	// 			for(int i = 0; i < intermCount.length; i++) {
-	// 				if (intermCount[i] > 0) numSet++;
-	// 				if (intermCount [i] > max) {
-	// 					curNode.intermAnc = new HashSet<String>();
-	// 					curNode.intermAnc.add("" + (char) (i + (i==(intermCount.length-1) ? 19 : 65)));
-	// 					max = intermCount [i];
-	// 				}
-	// 				else if (intermCount [i] == max) curNode.intermAnc.add("" + (char) (i + (i==(intermCount.length-1) ? 19 : 65)));
-	// 			}
-	// 		}
-	// 	}
-	// }
-	
-	// private Set<String> [] checkDownwards (node curNode) {
-	// 	Set<String>	returnArray [] = new Set [2];
-	// 	returnArray [0] = new HashSet<String>();
-	// 	returnArray [1] = null;
-		
-	// 	if (curNode.numChilds == 0) {
-	// 		returnArray [0].add("child");
-	// 	}
-	// 	else {
-	// 		boolean	isNonEmptyChild [] = new boolean [curNode.numChilds];
-	// 		int	sum = 0;
-			
-	// 		for (int i = 0; i < curNode.numChilds; i++) {
-	// 			if (!curNode.childArray[i].intermAnc.isEmpty()) {
-	// 				sum++;
-	// 				isNonEmptyChild [i] = true;
-	// 			}
-	// 		}
-			
-	// 		if (sum == 1) {
-	// 			for (int i = 0; i < isNonEmptyChild.length; i++) {
-	// 				if (isNonEmptyChild [i]) {
-	// 					returnArray = this.checkDownwards(curNode.childArray[i]);
-	// 					break;
-	// 				}
-	// 			}
-	// 		}
-	// 		else if (sum == 2) {
-	// 			for (int i = 0; i < isNonEmptyChild.length; i++) {
-	// 				if (isNonEmptyChild[i]) {
-	// 					if (returnArray [1] == null) returnArray [1] = new HashSet<String>(curNode.childArray[i].intermAnc);
-	// 					else {
-	// 						Set<String> tmpSet = new HashSet<String>(returnArray[1]);
-	// 						tmpSet.retainAll(curNode.childArray[i].intermAnc);
-	// 						if (tmpSet.isEmpty()) returnArray [0].add("union");
-	// 						else returnArray [0].add("intersection");
-	// 						returnArray [1].addAll(curNode.childArray[i].intermAnc);
-	// 						break;
-	// 					}
-	// 				}
-	// 			}
-	// 		}
-	// 		else if (sum > 2) {
-	// 			returnArray[0].add("multi");
-	// 		}
-	// 	}
-		
-	// 	return returnArray;
-	// }
-	
-	// private void fitchPhaseTwo (node curNode, int pos, boolean gaps) {
-	// 	if (curNode.numChilds > 0) {
-	// 		if (curNode.parent == null) for (int i = 0; i < curNode.numChilds; i++) fitchPhaseTwo (curNode.childArray[i], pos, gaps);
-	// 		else if (!curNode.intermAnc.isEmpty()) {
-	// 			Set<String>	finalSet = new HashSet<String>();
-	// 			for (String sc : curNode.intermAnc) {
-	// 				for (String sp : curNode.parent.intermAnc) {
-	// 					if (sc.equals(this.toUpper(sp))) {
-	// 						finalSet.add(sc);
-	// 						break;
-	// 					}
-	// 				}
-	// 			}
-				
-	// 			if (curNode.numChilds > 2) {
-	// 				if (!finalSet.isEmpty()) curNode.intermAnc = new HashSet<String>(finalSet);
-	// 			}
-	// 			else {
-	// 				boolean	fixed = true;
-	// 				for (String s : curNode.parent.intermAnc) {
-	// 					if (!finalSet.contains(s) && !finalSet.contains(this.toUpper(s))) {
-	// 						fixed = false;
-	// 						break;
-	// 					}
-	// 				}
-	// 				if (fixed) {
-	// 					curNode.intermAnc = new HashSet<String>(finalSet);
-	// 				}
-	// 				else {
-	// 					if (curNode.fitchType.equals("union")) {
-	// 						for (String s : curNode.parent.intermAnc) {
-	// 							if (!curNode.intermAnc.contains(this.toUpper(s))) {
-	// 								curNode.intermAnc.add(this.toLower(s));
-	// 							}
-	// 						}
-	// 					}
-	// 					else if (curNode.fitchType.equals("child")) {
-	// 						;
-	// 					}
-	// 					else {
-	// 						Set<String>	down [] = checkDownwards (curNode); // introduced
-	// 						if (!down[0].contains("child") && !down[0].contains("multi")) {
-	// 							for (String s : curNode.parent.intermAnc) {
-	// 								if (!curNode.intermAnc.contains(this.toUpper(s)) && down[1].contains(this.toUpper(s))) curNode.intermAnc.add(this.toLower(s));
-	// 							}
-	// 						}
-	// 					}
-	// 				}
-	// 			}
-				
-	// 			for (int i = 0; i < curNode.numChilds; i++) fitchPhaseTwo (curNode.childArray[i], pos, gaps);
-	// 		}
-	// 	}
-	// }
-	
-	// private void reconstructAncestralStates (node curNode, String strategy, int pos, boolean gaps) {
-	// 	String	finalSet [],
-	// 		parentChar;
-	// 	Random	r = new Random ();
-	// 	int	ind = 0;
-		
-	// 	Set<String> alphabetSet = new HashSet<String> ();
-	// 	for (int i = 65; i < 91; i++) {
-	// 		alphabetSet.add(("" + (char)i).toUpperCase());
-	// 	}
-	// 	if (gaps) alphabetSet.add("-");
-		
-	// 	if (curNode.parent == null) {
-	// 		if (curNode.intermAnc.isEmpty()) curNode.tmpSequence += "-";
-	// 		else {
-	// 			finalSet = new String [curNode.intermAnc.size()];
-	// 			for (String s : curNode.intermAnc) finalSet[ind++] = s;
-				
-	// 			if (finalSet.length == 1) {
-	// 				curNode.tmpSequence += this.toUpper(finalSet [0]);
-	// 			}
-	// 			else {
-	// 				// choose randomly
-	// 				curNode.tmpSequence += this.toUpper(finalSet [Math.abs(r.nextInt()) % finalSet.length]);
-	// 			}
-	// 		}
-	// 	}
-	// 	else if (curNode.numChilds > 0){
-	// 		parentChar = this.toUpper("" + curNode.parent.tmpSequence.charAt(curNode.tmpSequence.length()));
-	// 		if (curNode.intermAnc.isEmpty()) curNode.tmpSequence += parentChar;
-	// 		else {
-	// 			finalSet = new String [curNode.intermAnc.size()];
-	// 			for (String s : curNode.intermAnc) finalSet[ind++] = s;
-	// 			if (finalSet.length == 1) {
-	// 				curNode.tmpSequence += this.toUpper(finalSet [0]);
-	// 			}
-	// 			else {
-	// 				if(curNode.intermAnc.contains(parentChar) || curNode.intermAnc.contains(this.toLower(parentChar))) {
-	// 					if (curNode.intermAnc.contains(parentChar)) curNode.tmpSequence += parentChar;
-	// 					else {
-	// 						if (strategy.equals("DelTran")) {
-	// 							curNode.tmpSequence += parentChar;
-	// 						}
-	// 						else {
-	// 							curNode.intermAnc.retainAll(alphabetSet);
-	// 							ind = 0;
-	// 							finalSet = new String [curNode.intermAnc.size()];
-	// 							for (String s : curNode.intermAnc) finalSet[ind++] = s;
-								
-	// 							// choose randomly
-	// 							curNode.tmpSequence += this.toUpper(finalSet [Math.abs(r.nextInt()) % finalSet.length]);
-	// 						}
-	// 					}
-	// 				}
-	// 				else {
-	// 					ind = 0;
-	// 					curNode.intermAnc.retainAll(alphabetSet);
-	// 					finalSet = new String [curNode.intermAnc.size()];
-	// 					for (String s : curNode.intermAnc) {
-	// 						finalSet[ind++] = s;
-	// 					}
-						
-	// 					// choose randomly
-	// 					curNode.tmpSequence += this.toUpper(finalSet [Math.abs(r.nextInt()) % finalSet.length]);
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-		
-	// 	if (curNode.numChilds > 0) for (int i = 0; i < curNode.numChilds; i++) this.reconstructAncestralStates(curNode.childArray[i], strategy, pos, gaps);
-
-	// 	/*
-	// 	Ni -> Ni || (Ni) -> Ni is obligatory
-	// 	(Ni) -> (Ni) || Ni -> (Ni) is deltran
-	// 	(Ni) -> Nj || Ni -> Nj is acctran
-	// 	(Ni) -> (Nj) || Ni -> (Nj) is not permitted
-	// 	*/
-	// }
-	
-	// private String toUpper (String s) {
-	// 	if (s.charAt(0) == '^') return "-";
-	// 	else return s.toUpperCase();
-	// }
-	
-	// private String toLower (String s) {
-	// 	if (s.charAt(0) == '-') return "^";
-	// 	else return s.toLowerCase();
-	// }
-
-	// private void assignFixedAncestrals (node curNode, int pos, String ancChar) {
-	// 	if (curNode.numChilds != 0) {
-	// 		for (int i = 0; i < curNode.numChilds; i++) this.assignFixedAncestrals (curNode.childArray [i], pos, ancChar);
-	// 		curNode.tmpSequence += ancChar;
-	// 	}
-	// }
-	
-	// private void copyLeaveSeqs (node curNode) {
-	// 	if (curNode.numChilds > 0) {
-	// 		for (int i = 0; i < curNode.numChilds; i++) this.copyLeaveSeqs(curNode.childArray[i]);
-	// 		curNode.tmpSequence = "";
-	// 	}
-	// 	else curNode.tmpSequence = curNode.mSequence;
-	// }
-	
-	// private int [] checkSiteRecursion (node curNode, int pos, int counts [], boolean gaps) {
-	// 	int	tmpCounts [] = new int [counts.length];
-	// 	System.arraycopy(counts,0,tmpCounts,0,counts.length);
-	// 	if (curNode.numChilds > 0) {
-	// 		for (int i = 0; i < curNode.numChilds; i++) tmpCounts = checkSiteRecursion (curNode.childArray[i], pos, tmpCounts, gaps);
-	// 	}
-	// 	else {
-	// 		try{
-	// 			if (curNode.tmpSequence.charAt(pos) == '-' || curNode.tmpSequence.charAt(pos) == '/') {
-	// 				if (gaps) tmpCounts [tmpCounts.length-2]++;
-	// 			}
-	// 			else {
-	// 				if (curNode.tmpSequence.charAt(pos) != '?') tmpCounts [((int)Character.toUpperCase(curNode.tmpSequence.charAt(pos))) - 65]++;
-	// 			}
-	// 			tmpCounts [tmpCounts.length-1]++;
-	// 		}
-	// 		catch (Exception e) {
-	// 			System.out.println(e);
-	// 			System.out.println(curNode.identifier + " " + curNode.tmpSequence + " " + pos);
-	// 			System.exit(1);
-	// 		}
-	// 	}
-		
-	// 	return tmpCounts;
-	// }
-	
-	// private String checkSite (node curNode, int pos, boolean gaps) {
-	// 	int	counts [] = new int [28],
-	// 		sum = 0,
-	// 		which = 0;
-	// 	for (int i = 0; i < curNode.numChilds; i++) counts = checkSiteRecursion (curNode.childArray[i], pos, counts, gaps);
-	// 	for (int i = 0; i < (counts.length-1); i++) {
-	// 		if (counts [i] > 0) {
-	// 			sum++;
-	// 			which = i;
-	// 		}
-	// 	}
-	// 	if (sum > 1) {
-	// 		return "multi";
-	// 	}
-	// 	else {
-	// 		return "" + (char)(which+(which == 26 ? 19: 65));
-	// 	}
-	// }
-	
-	// private void setIntermediates (node curNode, int pos) {
-	// 	if (curNode.numChilds > 0) {
-	// 		curNode.mSequence = (pos == -1 ? new String(curNode.tmpSequence) : curNode.mSequence.subSequence(0, pos) + curNode.tmpSequence + (pos < (curNode.mSequence.length()-1) ? curNode.mSequence.substring(pos+1) : ""));
-	// 		curNode.tmpSequence = "";
-	// 		curNode.intermAnc = null;
-	// 	}
-		
-	// 	for (int i = 0; i < curNode.numChilds; i++) this.setIntermediates(curNode.childArray [i], pos);
-	// }
-	
 	/**
 	 * Fills all node tmpSequence parameter based on tmpSequence of the leaf nodes
 	 * @param root
 	 * @param seqLength
 	 * @param gaps allow gap. If false, we consider gap as unknown.
 	 */
-	public void ancestralStateReconstruction(node root, int seqLength, boolean gaps) {
+	public void ancestralStateReconstruction(node root, int seqLength, boolean gaps, String costMatrixFile) {
 		// System.err.println("Length="+seqLength);
 		// assert(gaps == true);
 		final char GAP_CHARACTER = '-';
@@ -476,25 +108,57 @@ public class Sankoff {
 
 		// fill the costMatrix
 		int[][] costMatrix = new int[options.length][options.length];
-		for (int i = 0; i<options.length; i++) {
-			for (int j = 0; j<options.length; j++) {
-				if (i == j) {
-					costMatrix[i][j] = 0;
-				} else if (options[i] == GAP_CHARACTER || options[j] == GAP_CHARACTER) {
-					if (options[i] == GAP_CHARACTER) {
-						costMatrix[i][j] = 1;
+		if (costMatrixFile == null) {
+			for (int i = 0; i<options.length; i++) {
+				for (int j = 0; j<options.length; j++) {
+					if (i == j) {
+						costMatrix[i][j] = 0;
+					} else if (options[i] == GAP_CHARACTER || options[j] == GAP_CHARACTER) {
+						if (options[i] == GAP_CHARACTER) {
+							costMatrix[i][j] = 1;
+						} else {
+							costMatrix[i][j] = 1;
+						}
 					} else {
 						costMatrix[i][j] = 1;
 					}
-				} else {
-					costMatrix[i][j] = 1;
 				}
 			}
-		}
-		if (!gaps && optionsIndex[(int) GAP_CHARACTER] != -1) {
-			int i = optionsIndex[(int) GAP_CHARACTER];
-			for (int j = 0; j<options.length; j++) {
-				costMatrix[i][j] = INFINITY;
+			if (!gaps && optionsIndex[(int) GAP_CHARACTER] != -1) {
+				int i = optionsIndex[(int) GAP_CHARACTER];
+				for (int j = 0; j<options.length; j++) {
+					costMatrix[i][j] = INFINITY;
+				}
+			}	
+		} else {
+			for (int[] row: costMatrix)
+    			Arrays.fill(row, INFINITY);
+			try (Stream<String> lines = Files.lines(Paths.get(costMatrixFile))) {
+				// stream.forEach(System.out::println);
+				int index = 0;
+				String[] firstRowOptions;
+				int[] firstRowIndex = null;
+				for (String line : lines.toArray(String[]::new)) {
+					if (index == 0) {
+						firstRowOptions = line.strip().replaceAll("  *", " ").split(" ");
+						firstRowIndex = new int[firstRowOptions.length];
+						for (int i=0; i<firstRowOptions.length; i++) {
+							firstRowIndex[i] = optionsIndex[firstRowOptions[i].charAt(0)];
+						}
+					} else {
+						String[] x = line.strip().replaceAll("  *", " ").split(" ");
+						int rowIndex = optionsIndex[x[0].charAt(0)];
+						// System.err.println("R " + rowIndex + " " + x[0].charAt(0));
+						for (int j=1; j<x.length; j++) {
+							if (rowIndex == -1 || firstRowIndex[j-1] == -1)
+								continue;
+							costMatrix[rowIndex][firstRowIndex[j-1]] = Integer.parseInt(x[j]);
+						}
+					}
+					index++;
+				}
+			} catch (IOException e) {
+				throw new RuntimeException(e);
 			}
 		}
 

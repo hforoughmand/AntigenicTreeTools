@@ -185,6 +185,7 @@ Examples (called from within the software directory):
 (1) java -cp bin/:jar/Jama.jar -Djava.library.path=bin/ phyloDriver -n example_data/tree.phy -p -t example_data/aa.aln -f AccTran -m example_data/aa.map -col -r f0dp7 -ls example_data/HI_titers.txt -o WHO1988a
 (2) java -cp bin/:jar/Jama.jar -Djava.library.path=bin/ phyloDriver -n example_data/tree.phy -p -t example_data/aa.aln -i example_data/aa.intermediate.aln -l example_data/aa.link -m example_data/aa.map -col -r f0dp7 -ls example_data/HI_distances.txt -d -o WHO1988b
 (3) java -jar AntigenicTreeTools.jar -n example_data/tree.phy -p -t example_data/aa.aln -f AccTran -m example_data/aa.map -col -r f0dp7 -ls example_data/HI_titers.txt -loo -o WHO1988c
+(4) java -cp bin/:jar/Jama.jar -Djava.library.path=bin/ phyloDriver -n example_data/tree.phy -p -t example_data/aa.aln -f Sankoff -m example_data/aa.map -col -r f0dp7 -ls example_data/HI_titers.txt -o WHO1988a -seed 4 -cost example_data/aa-cost.txt
 
 These examples highlight the use of the different versions and parameters. The first and second example use the 
 Fortran library to solve the NNLS problem, whereas the last example uses a Java library. All examples produce the 

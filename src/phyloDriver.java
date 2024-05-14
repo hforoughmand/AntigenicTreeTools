@@ -55,13 +55,14 @@ public class phyloDriver {
 	}
 
 	final static int ARGUMENT_SEED_INDEX = 17;
+	final static int ARGUMENT_COST_MATRIX_FILE = 18;
 	
 	public static String [] readArgs (String [] args) {
 		if (args.length == 0) {
 			printHelp ();
 			System.exit (1);
 		}
-		String arguments [] = new String [18];
+		String arguments [] = new String [19];
 		for (int i = 0; i < arguments.length; i++) arguments [i] = null;
 		for (int i = 0; i < args.length; i++) {
 			if (args[i].equals("-h")) { 
@@ -85,7 +86,11 @@ public class phyloDriver {
 			else if (args[i].equals("-cv")) { arguments [15] = args[++i]; }	//	do cross validation?
 			else if (args[i].equals("-d")) { arguments [16] = "isDistance"; }	//	HI values already distances?
 			else if (args[i].equals("-seed")) { arguments [ARGUMENT_SEED_INDEX] = args[++i]; }	//	HI values already distances?
-			else { System.out.println ("Unknown option '" + args[i] + "'! Use '-h' for help."); }
+			else if (args[i].equals("-cost")) { arguments [ARGUMENT_COST_MATRIX_FILE] = args[++i]; }	//	HI values already distances?
+			else { 
+				// System.out.println ("Unknown option '" + args[i] + "'! Use '-h' for help."); 
+				throw new RuntimeException("Unknown option '" + args[i] + "'! Use '-h' for help.");
+			}
 		}
 		if (!isSet(arguments [0])) {
 			System.out.println("No tree file given!");
@@ -180,7 +185,7 @@ public class phyloDriver {
 			System.out.print ("> infer ancestral character states ...");
 			if (argv[9].equals("Sankoff")) {
 				Sankoff sankoff = new Sankoff();
-				sankoff.ancestralStateReconstruction(root, leaveSeqs[0][1].length(), isSet(argv[12]));
+				sankoff.ancestralStateReconstruction(root, leaveSeqs[0][1].length(), isSet(argv[12]), argv[ARGUMENT_COST_MATRIX_FILE]);
 			} else {
 				fitch.ancestralStateReconstruction(root, leaveSeqs[0][1].length(), isSet(argv[12]), argv[9], isSet(argv[ARGUMENT_SEED_INDEX]) ? Long.parseLong(argv[ARGUMENT_SEED_INDEX]) : null);
 			}
