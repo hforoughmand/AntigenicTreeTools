@@ -43,7 +43,7 @@ LIB_LFLAGS	= -I /usr/lib/jvm/java-*/include/ -I /usr/lib/jvm/java-*/include/linu
 endif
 
 # create bin dir & compile java
-$(BIN)/phyloDriver.class: $(SRC)/phyloDriver.java
+$(BIN)/libbvlslib.so: $(SRC)/phyloDriver.java
 	@ mkdir -p $(BIN)
 	$(JAVAC) -cp $(SRC)/:$(JAR)/Jama.jar -d $(BIN) $(SRC)/phyloDriver.java
 	#$(JAVAH) -bootclasspath $(BIN) -d $(BIN) -jni NNLSsolver
