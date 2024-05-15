@@ -394,7 +394,7 @@ public class fitchAlgoObj {
 			curNode.tmpSequence = "";
 			curNode.intermAnc = null;
 		}
-		System.err.println("" + curNode.ID + ": " + curNode.mSequence + (curNode.numChilds == 0 ? "LEAF" : ""));
+		System.err.println("" + curNode.ID + ": " + curNode.mSequence + (curNode.numChilds == 0 ? " *" : ""));
 		for (int i = 0; i < curNode.numChilds; i++) this.setIntermediates(curNode.childArray [i], pos);
 	}
 	
