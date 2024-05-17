@@ -106,10 +106,11 @@ public class phyloDriver {
 			System.out.println("No sequences for intermediate nodes given!");
 			System.exit(1);
 		}
-		if (!isSet(arguments [3]) && arguments [9] == null) {
-			System.out.println("Node linkage for sequence mapping not given!");
-			System.exit(1);
-		}
+		//HADI: 
+		// if (!isSet(arguments [3]) && arguments [9] == null) {
+		// 	System.out.println("Node linkage for sequence mapping not given!");
+		// 	System.exit(1);
+		// }
 		if (!isSet(arguments [7])) {
 			System.out.println("No output name given!");
 			System.exit(1);
@@ -180,12 +181,18 @@ public class phyloDriver {
 			if (!isSet(argv[ARGUMENT_QUIET])) {
 				System.out.print ("> map linkage ...\t\t");
 			}
-			String	linkage [][] = tree.readLinkage(argv [3]);
-			// map linkage to tree
-			tree.cleanIdentifier(root);
-			tree.mapIntermediates(root,linkage);
-			if (!isSet(argv[ARGUMENT_QUIET])) {
-				System.out.println ("\tdone");
+			if (isSet(argv[3])) {
+				String	linkage [][] = tree.readLinkage(argv [3]);
+				// map linkage to tree
+				tree.cleanIdentifier(root);
+				tree.mapIntermediates(root,linkage);
+				if (!isSet(argv[ARGUMENT_QUIET])) {
+					System.out.println ("\tdone");
+				}
+			} else {
+				if (!isSet(argv[ARGUMENT_QUIET])) {
+					System.out.println ("\skipped");
+				}
 			}
 		}	
 		

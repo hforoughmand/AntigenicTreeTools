@@ -44,7 +44,7 @@ LIB_LFLAGS	= -I $(JAVA_HOME)/include/ -I $(JAVA_HOME)/include/linux/
 endif
 
 # create bin dir & compile java
-$(BIN)/libbvlslib.so: $(SRC)/phyloDriver.java
+$(BIN)/libbvlslib.so: $(SRC)/phyloDriver.java $(SRC)/bvls.c $(SRC)/bvls.f90 $(SRC)/fitchAlgoObj.java $(SRC)/HIMat.java $(SRC)/NNLSsolver.java $(SRC)/node.java $(SRC)/phyloDriver.java $(SRC)/Sankoff.java $(SRC)/treeObj.java
 	@ mkdir -p $(BIN)
 	$(JAVAC) -cp $(SRC)/:$(JAR)/Jama.jar -d $(BIN) $(SRC)/phyloDriver.java
 	#$(JAVAH) -bootclasspath $(BIN) -d $(BIN) -jni NNLSsolver
