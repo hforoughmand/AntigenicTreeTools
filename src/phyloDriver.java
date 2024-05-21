@@ -191,7 +191,7 @@ public class phyloDriver {
 				}
 			} else {
 				if (!isSet(argv[ARGUMENT_QUIET])) {
-					System.out.println ("\skipped");
+					System.out.println ("\tskipped");
 				}
 			}
 		}	
